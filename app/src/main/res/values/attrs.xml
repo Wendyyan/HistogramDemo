@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="ChartView">
+        <!--柱状图顶部颜色-->
+        <attr name="topColor" format="color"/>
+        <!--柱状图底部颜色-->
+        <attr name="bottomColor" format="color"/>
+        <!--柱状图选中颜色-->
+        <attr name="selectColor" format="color"/>
+        <!--左侧柱状图顶部颜色-->
+        <attr name="leftColor" format="color"/>
+        <!--左侧柱状图底部颜色-->
+        <attr name="leftBottomColor" format="color"/>
+        <!--右侧柱状图顶部颜色-->
+        <attr name="rightColor" format="color"/>
+        <!--右侧柱状图底部颜色-->
+        <attr name="rightBottomColor" format="color"/>
+        <!--左侧点击选中颜色-->
+        <attr name="selectLeftColor" format="color"/>
+        <!--右侧点击选中颜色-->
+        <attr name="selectRightColor" format="color"/>
+        <!--横轴字体颜色-->
+        <attr name="xyColor" format="color"/>
+    </declare-styleable>
+
+</resources>
