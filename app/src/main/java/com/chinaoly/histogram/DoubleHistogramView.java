@@ -19,43 +19,49 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by zyf on 2018/12/4.
+ * Created by zyf on 2018/12/11.
  */
-public class HistogramView extends View {
+public class DoubleHistogramView extends View {
 
-    private Paint mPaint, mChartPaint;
+    private Paint mPaint, mChartPaint, mShadowPaint;
     private Rect mBound;
     private int mWidth, mHeight;
-    private int mStartWidth, mChartWidth, mSize;
-    private int lineColor, topColor, bottomColor, selectColor;
+    private int mStartWidth, mChartWidth, mSize, heightUnit = 0;;
+    private int lineColor, leftColor, leftBottomColor, selectLeftColor,
+            rightColor, rightBottomColor, selectRightColor;
 
-    private OnNumberListener onNumberListener;
-    private int selectIndex = -1;
-    private int heightUnit = 0;
+    //选中标记
+    private List<Integer> selectIndexRoles = new ArrayList<>();
     private List<Integer> list = new ArrayList<>();
+    private OnNumberListener onNumberListener;
 
-    public HistogramView(Context context) {
+    public DoubleHistogramView(Context context) {
         this(context, null);
     }
 
-    public HistogramView(Context context, @Nullable AttributeSet attrs) {
-        this(context, attrs,0);
+    public DoubleHistogramView(Context context, @Nullable AttributeSet attrs) {
+        this(context, attrs, 0);
     }
 
-    public HistogramView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+    public DoubleHistogramView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray array = context.getTheme().obtainStyledAttributes(attrs,
                 R.styleable.ChartView, defStyleAttr, 0);
         lineColor = array.getColor(R.styleable.ChartView_xyColor, Color.BLACK);
-        topColor = array.getColor(R.styleable.ChartView_topColor, Color.BLACK);
-        bottomColor = array.getColor(R.styleable.ChartView_bottomColor, Color.BLACK);
-        selectColor = array.getColor(R.styleable.ChartView_selectColor, Color.RED);
+        leftColor = array.getColor(R.styleable.ChartView_leftColor, Color.BLACK);
+        leftBottomColor = array.getColor(R.styleable.ChartView_leftBottomColor, Color.BLACK);
+        selectLeftColor = array.getColor(R.styleable.ChartView_selectLeftColor, Color.RED);
+        rightColor = array.getColor(R.styleable.ChartView_rightColor, Color.BLACK);
+        rightBottomColor = array.getColor(R.styleable.ChartView_rightBottomColor, Color.BLACK);
+        selectRightColor = array.getColor(R.styleable.ChartView_selectRightColor, Color.RED);
         array.recycle();
     }
 
     {
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mChartPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mShadowPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mShadowPaint.setColor(Color.WHITE);
         mBound = new Rect();
     }
 
@@ -68,7 +74,6 @@ public class HistogramView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         int heightSize = MeasureSpec.getSize(heightMeasureSpec);
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
@@ -84,10 +89,10 @@ public class HistogramView extends View {
         super.onLayout(changed, left, top, right, bottom);
         mWidth = getWidth();
         mHeight = getHeight();
-        mSize = mWidth / 25;
+        mSize = mWidth / 39;
         mStartWidth = getWidth() / 13;
-        mChartWidth = getWidth() / 13 - mSize / 2;
-        heightUnit = getHeight() / 125;
+        mChartWidth = getWidth() / 13 - mSize;
+        heightUnit = getHeight() / 120;
     }
 
     @SuppressLint("DrawAllocation")
@@ -96,13 +101,9 @@ public class HistogramView extends View {
         super.onDraw(canvas);
         int space = mWidth / 13;
         mStartWidth = mWidth / 13;
-        mChartWidth = mWidth/ 13 - mSize / 2;
+        mChartWidth = mWidth/ 13 - mSize;
 
         mPaint.setColor(lineColor);
-        //画坐标轴
-//        canvas.drawLine(20, mHeight - 100, mWidth, mHeight - 100, mPaint);
-//        canvas.drawLine(20, mHeight - 100, 20, mHeight - 100 - heightUnit * 110, mPaint);
-
         mPaint.setTextSize(35);
         mPaint.setTextAlign(Paint.Align.CENTER);
 
@@ -123,18 +124,24 @@ public class HistogramView extends View {
             int x1 = mChartWidth + mSize;
             int y1 = mHeight - 100 - (list.get(i) * heightUnit);
 
-            if (i == selectIndex) {
+            if (selectIndexRoles.contains(i)) {
                 mChartPaint.setShader(null);
-                mChartPaint.setColor(selectColor);
+                mChartPaint.setColor(i % 2 == 0 ? selectLeftColor : selectRightColor);
             } else {
-                LinearGradient gradient = new LinearGradient(x0, y0, x1, y1,
-                        bottomColor, topColor, Shader.TileMode.MIRROR);
+                LinearGradient gradient;
+                if (i % 2 == 0) {
+                    gradient = new LinearGradient(x0, y0, x1, y1, leftBottomColor, leftColor,
+                            Shader.TileMode.MIRROR);
+                } else {
+                    gradient = new LinearGradient(x0, y0, x1, y1, rightBottomColor, rightColor,
+                            Shader.TileMode.MIRROR);
+                }
                 mChartPaint.setShader(gradient);
             }
             RectF rect = new RectF(x0, y0, x1, y1);
             canvas.drawRoundRect(rect, 20, 20, mChartPaint);
-            canvas.drawText(String.valueOf(list.get(i)), (x0 + x1) / 2, y1 - 10, mPaint);
-            mChartWidth += space;
+//            canvas.drawText(String.valueOf(list.get(i)), (x0 + x1) / 2, y1 - 10, mPaint);
+            mChartWidth += (i % 2 == 0) ? (3 + mSize) : (space - 3 - mSize);
         }
     }
 
@@ -149,15 +156,18 @@ public class HistogramView extends View {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 for (int i = 0; i < 12; i++) {
-                    top = (bottom - list.get(i)* heightUnit);
+                    int max = Math.max(list.get(i * 2), list.get(i * 2 + 1));
+                    top = (bottom - max * heightUnit);
                     Rect rect = new Rect(left, top, right, bottom);
                     left += mWidth / 12;
                     right += mWidth / 12;
                     if (rect.contains(x, y)) {
-                        selectIndex = i;
                         if (onNumberListener != null) {
-                            onNumberListener.onNum(list.get(i), (left + right) / 2, top);
+                            onNumberListener.onNum(i, x, y);
                         }
+                        selectIndexRoles.clear();
+                        selectIndexRoles.add(i * 2);
+                        selectIndexRoles.add(i * 2 + 1);
                         invalidate();
                     }
                 }
@@ -166,15 +176,6 @@ public class HistogramView extends View {
                 break;
         }
         return true;
-    }
-
-    @Override
-    protected void onWindowVisibilityChanged(int visibility) {
-        super.onWindowVisibilityChanged(visibility);
-        if (visibility == VISIBLE) {
-            mStartWidth = getWidth() / 13;
-            mChartWidth = getWidth() / 13 - mSize / 2;
-        }
     }
 
     public interface OnNumberListener{
